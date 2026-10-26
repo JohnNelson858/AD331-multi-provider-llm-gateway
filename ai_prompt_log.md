@@ -213,11 +213,14 @@ reported; the gateway does not automatically retry it. Regressions:
 
 ### John's manual review checkpoint
 
-- [ ] Read the four findings and compare the baseline with the source diff.
-- [ ] Explain why cumulative counters replace rather than add.
-- [ ] Explain why `from None` differs from removing retained exception context.
-- [ ] Pull the changes on the Dell laptop and run `uv run pytest -q`.
-- [ ] Confirm personal review in this log after actually completing it.
+- [x] Read the four findings and compare the baseline with the source diff.
+- [x] Explain why cumulative counters replace rather than add.
+- [x] Explain why `from None` differs from removing retained exception context.
+- [x] Pull the changes on the Dell laptop and run `uv run pytest -q`.
+- [x] Confirm personal review in this log after actually completing it.
+
+I, John Nelson, reviewed the Step 3 findings and before-and-after code. 
+I pulled the changes onto my Dell laptop and confirmed that all 10 tests passed.
 
 Step 4 is not started.
 
