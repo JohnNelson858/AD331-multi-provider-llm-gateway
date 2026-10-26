@@ -326,3 +326,27 @@ limits remain. Do not claim all integration tests passed when two are skipped.
 
 Pending further instruction. No Docker/cloud deployment or video submission is
 claimed complete by the automated QA results.
+
+
+## October 26 follow-up: Anthropic request compatibility fix
+
+John supplied an Anthropic UI screenshot showing GatewayProviderError and no
+text/usage. Investigation found that the generated code combined SDK 2.3's
+API version `2026-10-21` with a `temperature` field, which the provider's
+[migration guide](https://platform.claude.com/docs/en/api/migration-2026-10-21)
+says is rejected with HTTP 400. The generic UI error alone cannot identify the
+server's response; the code incompatibility was independently reproduced.
+
+Before: `extra_body={"temperature": temperature}` with SDK's default version.
+After: also pass `extra_headers={"anthropic-version": "2023-06-01"}` for the
+existing Haiku 4.5 model, retaining effective temperature control.
+
+Added an actual SDK + local HTTP MockTransport regression that checks serialized
+headers/body and parses provider-shaped SSE. Result before fix: **1 failed**.
+Result after fix: **55 passed, 2 skipped**; client smoke checks passed. No paid
+requests or real credentials were used by the assistant. Live Anthropic retry
+on the Dell remains pending; the two paid pytest cases are still unexecuted.
+
+John previously verified the live OpenAI UI request (36 input/32 output tokens,
+1911.6 ms TTFT, 15.4 tokens/sec displayed, $0.000025 displayed cost). This is
+separate from the opt-in live pytest case. Step 6 remains unstarted.

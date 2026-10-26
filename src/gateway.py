@@ -197,11 +197,13 @@ class UnifiedLLMGateway:
             else:
                 if self._anthropic is None:
                     self._anthropic = AsyncAnthropic(api_key=_api_key(provider), timeout=60.0, max_retries=0)
-                # SDK 2.3 omits the named temperature parameter. Pass the legacy
-                # Haiku 4.5 request field using the documented extra_body option.
+                # API 2026-10-21 rejects temperature, including legacy models.
+                # Keep Haiku 4.5 on the documented compatible API version so
+                # the UI temperature control remains effective with SDK 2.x.
                 upstream = await self._anthropic.messages.create(
                     model=model, messages=[{"role": "user", "content": prompt}],
                     max_tokens=max_tokens, stream=True,
+                    extra_headers={"anthropic-version": "2023-06-01"},
                     extra_body={"temperature": temperature},
                 )
                 async with upstream:

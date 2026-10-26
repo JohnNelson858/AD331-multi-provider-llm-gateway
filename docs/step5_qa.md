@@ -4,7 +4,7 @@ Student: John Nelson · AD 331 · Local date: October 25, 2026
 
 ## Observed result
 
-`uv run pytest -q`: **54 passed, 2 skipped**. All 56 cases were collected.
+`uv run pytest -q`: **55 passed, 2 skipped**. All 57 cases were collected after the Anthropic compatibility regression was added.
 `node tests/web_client_smoke.cjs`: passed (simulated DOM and transport).
 `git diff --check`: passed for this change.
 
@@ -86,7 +86,7 @@ git pull --ff-only
 uv run pytest -v
 ```
 
-Expected default outcome: **54 passed, 2 skipped**. If tokenizer data is not
+Expected default outcome: **55 passed, 2 skipped**. If tokenizer data is not
 cached, allow its first-use download to finish. A download error is a failed
 check, not permission to substitute a stub or silently skip validation.
 
@@ -125,3 +125,28 @@ mobile layout in a native browser, one-hour cache pricing, deployed behavior
 and the required live video demo remain unverified. Tested sanitized error
 paths do not guarantee third-party debug logs or monitoring that captures frame
 locals are safe. Step 6 deployment has not started.
+
+## October 26 follow-up: Anthropic temperature compatibility
+
+John's Anthropic UI request failed with a sanitized generic provider error.
+The screenshot does not expose the underlying HTTP status. Inspection found a
+specific request incompatibility: SDK 2.3 defaults to API `2026-10-21`, but the
+gateway also sends `temperature` through `extra_body`. That API version rejects
+sampling parameters with HTTP 400, even for legacy models.
+
+To preserve the assignment's temperature control, Haiku 4.5 requests now send
+`extra_headers={"anthropic-version": "2023-06-01"}` alongside temperature.
+This is the documented compatibility option; no dependency downgrade or model
+change is required. See [Anthropic's migration guide](https://platform.claude.com/docs/en/api/migration-2026-10-21).
+
+`tests/test_anthropic_transport.py` runs the actual SDK against a local HTTP mock,
+rejects the former version/temperature combination and checks the serialized
+version header, temperature body, SSE parsing and final usage. It failed before
+the fix and passed afterward. This tests the real SDK's wire format but does not
+establish live Anthropic account access. Default suite: **55 passed, 2 skipped**.
+The earlier 54-pass Dell run remains valid historical evidence.
+
+John also supplied a successful live OpenAI screenshot: 36 input tokens,
+32 output tokens, TTFT 1911.6 ms, displayed throughput 15.4 tokens/sec and cost
+$0.000025. It ended at the output-token limit. This verifies that UI request,
+not the separate optional fifty-word live pytest case. Anthropic retry pending.

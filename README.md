@@ -6,14 +6,16 @@
 
 ## Current status
 
-Step 5 automated QA is implemented: **54 passed, 2 skipped**. Default tests use
+Step 5 automated QA is implemented: **55 passed, 2 skipped**. Default tests use
 mocked providers and the real local tokenizer. The two skipped cases are paid
 live checks that require explicit `--live` opt-in. See the
 [Step 5 QA report](docs/step5_qa.md) for the requirement matrix and limitations.
 
 The Step 4 local interface is running on John's Dell; he confirmed its desktop
 appearance. John completed and committed the Step 3 manual review in `448eb1c`.
-Live provider responses, account model access and billing remain unverified.
+John verified a live OpenAI response in the local UI. Anthropic live verification
+is pending a compatibility fix: Haiku 4.5 requests explicitly use API version
+`2023-06-01` to retain temperature support with SDK 2.x.
 Step 6 deployment is pending. This is a local development app.
 
 ## Environment and prerequisites
@@ -86,6 +88,7 @@ AD331-multi-provider-llm-gateway/
     test_web.py
     test_pricing.py
     test_live.py
+    test_anthropic_transport.py
     conftest.py
     qa_data.py
     web_client_smoke.cjs
@@ -175,7 +178,7 @@ separate deployment/security review in Step 6; do not simply expose this port.
 uv run pytest -q
 ```
 
-Current result: **54 passed, 2 skipped**. The default suite makes no paid
+Current result: **55 passed, 2 skipped**. The default suite makes no paid
 provider requests. Gateway tests now use real tiktoken; first use may download
 vocabulary data. Checks cover both stream protocols, a fixed fifty-word prompt,
 timing, billing precision, malformed keys, secret-bearing SDK exceptions,
