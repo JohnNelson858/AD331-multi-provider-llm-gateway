@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LLM Gateway · John Nelson</title><link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script></head>
+<body>
+<header><div class="brand">JN <span>/ AD 331</span></div><span class="tag">LOCAL WORKSPACE</span></header>
+<main>
+<section class="intro"><p class="eyebrow">MULTI-PROVIDER LLM GATEWAY</p><h1>One prompt. Two providers.<br><span>Every token accounted for.</span></h1><p>Stream a response and watch latency, token usage and estimated cost as it arrives.</p></section>
+<div class="workspace">
+<section class="panel controls"><h2>Configure your request</h2>
+<form id="prompt-form">
+<div class="row"><label>Provider<select id="provider" required><option value="openai">OpenAI</option><option value="anthropic">Anthropic</option></select></label><label>Model<select id="model" required></select></label></div>
+<label for="prompt">Your prompt</label><textarea id="prompt" maxlength="16000" rows="6" required placeholder="Explain an async generator in two sentences."></textarea>
+<div class="row"><label>Temperature <output id="temperature-value">0.7</output><input id="temperature" type="range" min="0" max="1" step="0.1" value="0.7"></label><label>Maximum output tokens<input id="max-tokens" type="number" min="1" max="4096" value="512" required></label></div>
+<p class="hint">Prompts are independent requests. Sending uses your provider API account and may incur charges.</p>
+<div class="actions"><button id="send" type="submit" disabled>Send prompt <span>↗</span></button><button id="stop" class="secondary" type="button" disabled>Stop</button></div>
+</form><p class="note">API keys stay in your local <code>.env</code> file. ChatGPT subscriptions do not include API usage.</p>
+</section>
+<aside class="panel telemetry"><div class="panel-heading"><h2>Live telemetry</h2><span id="usage-badge" class="tag">WAITING</span></div><div class="metric-grid">
+<div class="metric"><span>Time to first token</span><strong id="ttft">—</strong><small>milliseconds</small></div><div class="metric"><span>Generation speed</span><strong id="speed">—</strong><small>tokens / second · end to end</small></div>
+<div class="metric"><span>Prompt tokens</span><strong id="input-count">—</strong><small>includes cache usage</small></div><div class="metric"><span>Completion tokens</span><strong id="output-count">—</strong><small>generated output</small></div>
+<div class="cost"><span>Execution cost · USD</span><strong id="cost">—</strong><small id="cost-caption">Waiting for usage</small></div></div><p id="usage-note" class="hint">Interim usage may be estimated or lag behind the text. Final counts come from the provider.</p></aside>
+<section class="panel response-panel"><div class="panel-heading"><h2>Response</h2><span id="status" role="status">Ready</span></div><div id="error" role="alert" hidden></div><pre id="response">Your streamed response will appear here.</pre><div class="response-footer"><span id="request-detail">No request yet</span><span id="total">Total tokens: —</span></div></section>
+</div><footer>John Nelson · AD 331 Artificial Intelligence <span>Local development · Live provider access requires API keys</span></footer>
+</main></body></html>

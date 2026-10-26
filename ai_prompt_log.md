@@ -5,8 +5,8 @@ Course: AD 331, Artificial Intelligence
 
 ## Workflow constraint
 
-Work proceeds one assignment step at a time. John authorized Step 3 with
-'Proceed with Step 3.' Publish the audit and fixes, then stop before Step 4.
+Work proceeds one assignment step at a time. John authorized Step 4 with
+'Proceed with Step 4.' Publish the interface and stop before Step 5.
 
 ## Step 1: Environment setup
 
@@ -222,9 +222,64 @@ reported; the gateway does not automatically retry it. Regressions:
 I, John Nelson, reviewed the Step 3 findings and before-and-after code. 
 I pulled the changes onto my Dell laptop and confirmed that all 10 tests passed.
 
-Step 4 is not started.
+John committed the review above in `448eb1c`. The Step 4 work below followed
+his later authorization; it does not alter the historical Step 3 findings.
 
-## Steps 4-6: Interface, QA, deployment
+## Step 4: Interactive web interface
 
-Pending. Record commands, observed results, and any live-provider verification
-separately from mocked tests as implementation proceeds.
+Authorized by John: **Proceed with Step 4**. Implemented by ChatGPT/Codex on
+2026-10-25 (John's local date).
+
+- Read the original assignment's Step 4 requirements and pulled John's manual
+  review commit before editing. Preserved his checklist and review statement.
+- Implemented FastAPI lifespan management in `src/app.py`, using one gateway
+  and pooled clients per application event loop. Stream requests close their
+  generators with `aclosing`, including when the HTTP response is cancelled.
+- Added a responsive local page in `src/web/`: provider/model dropdowns, prompt,
+  temperature, output limit, Send/Stop, streamed plain text, TTFT, end-to-end
+  tokens/sec, input/output/total counts and cost formatted to six USD decimals.
+- SSE frames carry normalized `StreamChunk` data. Browser Fetch reads POST
+  response bytes incrementally and handles split UTF-8/frame boundaries.
+- Interim metrics are provisional; incomplete/error/cancelled requests never
+  show a successful final usage state. Cost formatting uses server-side Decimal.
+- Credentials are read only on the server from environment or local `.env`.
+  Error responses use static messages and do not serialize SDK exceptions.
+  Validation responses do not echo submitted input. Generated text is rendered
+  with `textContent`; no model HTML is executed.
+- Added local host and cross-origin browser boundaries. No authentication or
+  user spending controls are claimed; public deployment is still out of scope.
+- Added six web contract tests in `tests/test_web.py` and an optional Node smoke
+  script `tests/web_client_smoke.cjs` using a simulated DOM/transport.
+
+Verification performed:
+
+- `uv run pytest -q`: **16 passed**. These are offline checks, not the complete
+  Step 5 QA suite or live integration tests.
+- `node --check src/web/app.js`: passed.
+- `node tests/web_client_smoke.cjs`: passed for progressive response display,
+  split UTF-8, final metrics, provider switching, Stop and error recovery.
+- `uv run python -m compileall -q src` and `git diff --check`: passed.
+- Started real Uvicorn processes with the app and a delayed mock gateway in a
+  temporary harness. HTTP streamed one event at 0.00 s and subsequent events at
+  1.50 s, confirming progressive delivery rather than end-of-request buffering.
+- The real app returned a safe AuthenticationError event without a configured key.
+- Browser visual checks were attempted but did not execute: no Chromium binary
+  was present, and Playwright's browser download produced invalid archives.
+  No claim is made that visual layout, native browser Stop behavior or actual
+  provider cancellation has been tested. The simulated client checks are separate.
+- No real keys or paid API requests were used. Existing model lifecycle,
+  account-access, SDK/server compatibility and pricing limitations remain.
+
+Implementation references:
+[FastAPI streaming](https://fastapi.tiangolo.com/advanced/stream-data/),
+[FastAPI lifespan](https://fastapi.tiangolo.com/advanced/events/),
+[MDN SSE framing](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events),
+[MDN Fetch streaming](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch).
+
+Dell verification pending: pull changes, launch Uvicorn, open the page and inspect
+layout/controls. Live generation needs local keys and verified account model access.
+
+## Steps 5-6: Structured QA and deployment
+
+Pending further instruction. Do not mark the full QA matrix, live provider demo,
+Docker deployment, or video submission complete based on these offline checks.

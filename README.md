@@ -6,11 +6,15 @@
 
 ## Current status
 
-Step 3 AI-assisted audit and fixes are implemented. Ten offline tests pass,
-including five regressions reproduced against the preserved Step 2 commit.
-John's manual review is still pending. Live provider verification, interactive UI,
-full security/QA suite and deployment remain pending. This is not yet a
-production service.
+Step 4 local web interface is implemented with FastAPI and Server-Sent Events.
+It supports provider/model selection, temperature, a streamed response, Stop,
+and live token/timing/cost metrics. Sixteen offline Python tests and simulated
+JavaScript client smoke checks pass. John completed and committed his Step 3
+manual review in `448eb1c`.
+
+Opening and checking the page on John's Dell is next. Visual browser testing and
+live provider calls are not yet verified. Full Step 5 QA and Step 6 deployment
+remain pending. This is a local development app, not a public production service.
 
 ## Environment and prerequisites
 
@@ -69,17 +73,23 @@ AD331-multi-provider-llm-gateway/
     pricing.py
     app.py
     demo.py
+    web/
+      index.html
+      app.js
+      style.css
   tests/
     __init__.py
     test_gateway.py
     test_audit_regressions.py
     test_security.py
+    test_web.py
+    web_client_smoke.cjs
 ```
 
 Runtime dependencies: OpenAI and Anthropic async SDKs, Pydantic v2, tiktoken,
 FastAPI, Uvicorn, python-dotenv, and Streamlit. Development dependencies:
-pytest and pytest-asyncio. The final UI framework will be chosen during
-implementation; installing both web options matches the assignment setup.
+pytest and pytest-asyncio. FastAPI + SSE is used for the interface; Streamlit remains an installed alternative
+from the assignment setup.
 
 ## Configuration and security
 
@@ -95,12 +105,13 @@ secrets. `.env.example` intentionally remains tracked. No keys are needed
 for the environment setup itself, and installing the SDKs does not call
 either provider.
 
-## Planned architecture
+## Architecture
 
 `UnifiedLLMGateway.stream()` yields Pydantic `StreamChunk` objects with normalized
 text fragments. One gateway owns pooled async clients on a single application
-event loop. Each request has separate counters. The client below will become the
-web UI in Step 4; only the terminal demo currently exists.
+event loop. Each request has separate counters. The browser below is the
+web UI. FastAPI owns one gateway for its lifespan; a POST request streams SSE
+frames consumed with browser Fetch. Provider credentials never enter the page.
 
 ```mermaid
 flowchart TD
@@ -115,23 +126,71 @@ flowchart TD
 
 ## Execution and QA
 
-The web app does not launch yet. To verify the prototype without credentials
-or provider charges, run:
+### Launch the local web app
+
+From the repository folder in PowerShell:
+
+```powershell
+git pull --ff-only
+uv sync --locked
+uv run uvicorn src.app:app --host 127.0.0.1 --port 8000
+```
+
+Keep the terminal running and open <http://127.0.0.1:8000> in your browser.
+Press **Ctrl+C** in the terminal to stop the server. Do not launch with
+`streamlit run`; this interface uses FastAPI. No provider key is required to
+open the page. To generate real responses, configure your local `.env` as
+explained above and restart the server. Existing environment variables take
+precedence over `.env`. Never paste keys into the prompt or commit them.
+
+1. Choose a provider and its model. Models filter automatically by provider.
+2. Enter a prompt, set temperature and the output-token limit, then click
+   **Send prompt**. This makes a real, potentially billable API request.
+3. Watch text and metrics update. Provider fragments may contain multiple tokens.
+   The dashboard marks interim values **PROVISIONAL** and completed usage **FINAL**.
+4. **Stop** aborts the browser request; the server closes the upstream generator.
+   Partial results stay labeled **INCOMPLETE**. Already processed tokens can still
+   be billed, and cancellation does not guarantee an immediate provider-side stop.
+5. Missing keys and provider failures appear as readable errors. A failed or
+   interrupted stream never becomes a successful final result. Correct keys in
+   `.env` and restart the server before retrying.
+
+The page displays provider text as plain text, not HTML or executable Markdown.
+Prompts and responses are not persisted by this app. Cost is formatted to six
+USD decimal places using Decimal on the server; the exact internal value remains
+in telemetry. Configured rates are estimates of API cost, not an invoice.
+
+This app binds to loopback and restricts host/cross-origin browser requests. It
+has no public-user authentication or spending quota. Public hosting needs a
+separate deployment/security review in Step 6; do not simply expose this port.
+
+### Offline verification
 
 ```powershell
 uv run pytest -q
 ```
 
-These are five initial mocked tests plus five Step 3 regressions, not the complete
-Step 5 suite. They check
-both providers' normalized output, OpenAI's empty-choices usage tail, Anthropic's
-cumulative counters, missing usage/key behavior, and Decimal precision. The
-local tokenizer is stubbed. Live usage, pricing invoices, security edge cases,
-and real tokenizer comparisons are not verified by these tests. The regressions
-cover final Anthropic input/cache updates, partial usage labels, sanitized exception
-chains, cleanup after a close failure, and idempotent client ownership handling.
+Current result: **16 passed**. These include the original five gateway checks,
+five Step 3 regressions, and six web checks for SSE normalization, cost formatting,
+provider/model validation, error sanitation, lifecycle and origin/host boundaries.
+The suite uses mock providers and a stubbed tokenizer; it does not validate
+live provider behavior, real token counts, invoices or account access. The full
+Step 5 QA matrix is still pending.
 
-### Optional live terminal demo (later, after key setup and audit)
+If Node.js is already installed, optional client smoke checks run with:
+
+```powershell
+node tests/web_client_smoke.cjs
+```
+
+Those checks simulate the DOM and streaming transport. They cover progressive
+text, split UTF-8, metrics, provider selection, Stop and error recovery. They do
+not replace a real browser check. A real local HTTP experiment also confirmed
+progressive delivery from a delayed mock provider (first chunk at 0.00 s, later
+chunks at 1.50 s). No paid calls were used. Browser visual QA could not run in the
+assistant environment because Chromium was unavailable and its download failed.
+
+### Optional live terminal demo (after key setup and account access checks)
 
 ```powershell
 uv run python -m src.demo --help
@@ -195,7 +254,8 @@ See [ai_prompt_log.md](ai_prompt_log.md) and the
 [generation prompt record](docs/step2_generation_prompt.md). The initial prototype
 is retained as its own commit. Step 3 findings, before-and-after excerpts and
 regression evidence are recorded in the log and [source diff](docs/step3_refactor.diff).
-Student manual review remains pending. The full
+John committed his completed manual review in `448eb1c`. Step 4 implementation
+and verification limits are recorded in the log. The full
 `tests/test_security.py` suite is still pending Step 5.
 
 ## Deployment and recording
