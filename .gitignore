@@ -1,0 +1,28 @@
+# Local credentials; the example contains placeholders only.
+.env
+.env.*
+!.env.example
+
+# Local environment and Python caches.
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Editor and operating system files.
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Streamlit credentials and machine-local configuration.
+.streamlit/secrets.toml
+
+# Build output; commit uv.lock for reproducible dependency versions.
+build/
+dist/
+*.egg-info/
