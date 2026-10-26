@@ -6,10 +6,11 @@
 
 ## Current status
 
-Step 2 initial prototype. The gateway normalizes text streams from OpenAI and
-Anthropic and emits token/timing/cost telemetry. Five mocked smoke checks pass.
-The manual audit, live provider verification, interactive UI, full security/QA
-suite, and deployment remain pending. This is not yet a production service.
+Step 3 AI-assisted audit and fixes are implemented. Ten offline tests pass,
+including five regressions reproduced against the preserved Step 2 commit.
+John's manual review is still pending. Live provider verification, interactive UI,
+full security/QA suite and deployment remain pending. This is not yet a
+production service.
 
 ## Environment and prerequisites
 
@@ -60,6 +61,7 @@ AD331-multi-provider-llm-gateway/
   ai_prompt_log.md
   docs/
     step2_generation_prompt.md
+    step3_refactor.diff
   src/
     __init__.py
     gateway.py
@@ -70,6 +72,7 @@ AD331-multi-provider-llm-gateway/
   tests/
     __init__.py
     test_gateway.py
+    test_audit_regressions.py
     test_security.py
 ```
 
@@ -116,14 +119,17 @@ The web app does not launch yet. To verify the prototype without credentials
 or provider charges, run:
 
 ```powershell
-uv run pytest tests/test_gateway.py -v
+uv run pytest -q
 ```
 
-These are five initial mocked tests, not the complete Step 5 suite. They check
+These are five initial mocked tests plus five Step 3 regressions, not the complete
+Step 5 suite. They check
 both providers' normalized output, OpenAI's empty-choices usage tail, Anthropic's
 cumulative counters, missing usage/key behavior, and Decimal precision. The
 local tokenizer is stubbed. Live usage, pricing invoices, security edge cases,
-and real tokenizer comparisons are not verified by these tests.
+and real tokenizer comparisons are not verified by these tests. The regressions
+cover final Anthropic input/cache updates, partial usage labels, sanitized exception
+chains, cleanup after a close failure, and idempotent client ownership handling.
 
 ### Optional live terminal demo (later, after key setup and audit)
 
@@ -148,8 +154,10 @@ preparing this prototype.
   Prompt estimates exclude chat framing and are not the final billed input count.
 - Final counts: provider-reported usage; missing finish/usage metadata produces
   `IncompleteStreamError` instead of a fabricated successful final event.
-- Anthropic interim counters can lag text delivery. Its cumulative output usage
-  replaces earlier snapshots. It has no tiktoken estimate in this draft.
+- Anthropic interim counters can lag text delivery. `provider_partial` means
+  provider counts are present but final usage has not arrived. Supplied cumulative
+  input/output/cache values replace earlier snapshots; omitted values are retained.
+  It has no tiktoken estimate in this draft.
 - Costs remain Decimal values internally and serialize as JSON strings. A UI can
   format six decimal places without discarding the stored precision.
 - Zero text output can have `ttft_ms=None`. `stop_reason` preserves limits/refusal
@@ -185,8 +193,9 @@ Six USD decimal places is a display requirement, not micro-cent precision.
 
 See [ai_prompt_log.md](ai_prompt_log.md) and the
 [generation prompt record](docs/step2_generation_prompt.md). The initial prototype
-is retained as its own commit. Student manual audit and before-and-after fixes
-are pending Step 3. No defects or student review are fabricated. The full
+is retained as its own commit. Step 3 findings, before-and-after excerpts and
+regression evidence are recorded in the log and [source diff](docs/step3_refactor.diff).
+Student manual review remains pending. The full
 `tests/test_security.py` suite is still pending Step 5.
 
 ## Deployment and recording

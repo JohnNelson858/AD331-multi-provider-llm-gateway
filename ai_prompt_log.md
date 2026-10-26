@@ -5,9 +5,8 @@ Course: AD 331, Artificial Intelligence
 
 ## Workflow constraint
 
-Work proceeds one assignment step at a time. John authorized Step 2 with
-'Proceed with Step 2.' Stop after publishing that initial prototype and wait
-for his instruction before the Step 3 manual audit.
+Work proceeds one assignment step at a time. John authorized Step 3 with
+'Proceed with Step 3.' Publish the audit and fixes, then stop before Step 4.
 
 ## Step 1: Environment setup
 
@@ -88,9 +87,139 @@ assertion is made that this proxy-specific issue occurs on John's Dell laptop.
 
 ## Step 3: Manual audit and fixes
 
-Pending an initial prototype and John's review. Document real findings with
-file names, affected lines or commits, evidence, and before-and-after diffs.
-Do not invent defects or claim a manual student review has already occurred.
+Authorized by John: **Proceed with Step 3.**
+
+Audit performed by ChatGPT/Codex on 2026-10-26, against preserved Step 2 commit
+`6d778218a3b7b92035476cecbc2669d7b9b06194`. This is an AI-assisted audit;
+John's own manual review and explanation remain to be completed.
+
+### Reproduced findings and fixes
+
+All five new regression tests failed against the unchanged baseline:
+`uv run pytest tests/test_audit_regressions.py -q` → **5 failed**.
+After the fixes, `uv run pytest -q` → **10 passed** (five original checks plus
+five regression checks). Tests make no real API calls. The full source diff is
+[docs/step3_refactor.diff](docs/step3_refactor.diff).
+
+**1. Anthropic cumulative input/cache updates were discarded — correctness.**
+`src/gateway.py`, baseline `message_delta` branch. Starting input 11, followed by
+final uncached input 20, cached reads 5, and output 5, produced input 11 and total
+16 instead of input 25 and total 30. At the existing pricing rates, cost was
+$0.000036 instead of $0.0000455. Optional usage fields are cumulative snapshots;
+replace supplied values and retain omitted ones. Explicit zero remains meaningful.
+
+Before:
+```python
+elif event.type == "message_delta":
+    output_tokens = event.usage.output_tokens
+```
+After:
+```python
+elif event.type == "message_delta":
+    apply_anthropic_usage(event.usage)
+```
+The shared helper handles input, output, cache reads and cache writes at both
+`message_start` and `message_delta`, then recomputes total input without counting
+cached tokens twice. Regression: `test_anthropic_final_input_and_cache_counts_replace_start_values`.
+
+**2. Initial Anthropic provider usage was labeled unavailable — telemetry.**
+`src/gateway.py` snapshot and `src/schemas.py`. Actual provider input counts were
+present at `message_start`, but the provenance field said `unavailable`.
+
+Before:
+```python
+source = "provider" if got_usage else ("local_estimate" if local_prompt is not None else "unavailable")
+```
+After:
+```python
+source = ("provider" if got_usage else "provider_partial" if partial_usage
+          else "local_estimate" if local_prompt is not None else "unavailable")
+```
+The schema now accepts `provider_partial`. Interim telemetry remains provisional;
+only a complete stream emits the final event. Regression:
+`test_anthropic_start_usage_is_labeled_as_partial_provider_usage`.
+
+**3. Sanitized exceptions retained the raw SDK exception — privacy hardening.**
+`src/gateway.py` SDK error handlers. A fake SDK exception containing a test secret
+was absent from the public message but remained reachable via `__context__`.
+`from None` hides a chain in the normal traceback; it does not remove the retained
+object. Monitoring that serializes exception chains could expose provider details.
+This test demonstrates retained data, not an observed disclosure of a real key.
+
+Before:
+```python
+except Exception:
+    raise GatewayProviderError("The provider request could not be completed.") from None
+```
+After:
+```python
+except Exception:
+    safe_error = GatewayProviderError("The provider request could not be completed.")
+# Outside the exception handler:
+if safe_error is not None:
+    raise safe_error
+```
+Authentication, rate-limit and connection mappings follow the same pattern.
+Regression: `test_sanitized_error_does_not_retain_secret_in_exception_chain`.
+This removes implicit exception chaining; it is not a guarantee that arbitrary
+local-variable capture or an external SDK's own debug logs are secret-free.
+
+**4. Shutdown skipped the second client after a failure — resource lifecycle.**
+`src/gateway.py`, `aclose`. A failed first close raised a raw SDK error and skipped
+the other client's close. Repeated shutdown also closed owned clients twice.
+
+Before:
+```python
+self._closed = True
+if self._own_openai and self._openai is not None:
+    await self._openai.close()
+if self._own_anthropic and self._anthropic is not None:
+    await self._anthropic.close()
+```
+After (core logic):
+```python
+if self._closed:
+    return
+self._closed = True
+# Collect gateway-owned clients only.
+results = await asyncio.gather(*(client.close() for client in clients),
+                               return_exceptions=True)
+if any(isinstance(result, BaseException) for result in results):
+    raise GatewayProviderError("One or more provider clients could not close cleanly.")
+```
+Both closes are attempted before reporting a safe failure. A repeated call is a
+no-op, and caller-owned injected clients remain caller-owned. A failed cleanup is
+reported; the gateway does not automatically retry it. Regressions:
+`test_shutdown_attempts_both_owned_clients_after_first_close_fails` and
+`test_shutdown_is_idempotent_and_respects_injected_client_ownership`.
+
+### Review coverage and limits
+
+- Reviewed `src/gateway.py`, `src/schemas.py`, `src/pricing.py`, `src/demo.py`,
+  existing tests and configuration for async SDK use, state isolation, empty
+  OpenAI usage tails, first-text TTFT, cumulative usage, Decimal costs, credential
+  handling and ownership. No synchronous provider calls were found.
+- `uv run python -m src.demo --help` and `git diff --check` passed.
+- No real credentials or paid requests were used. Tokenizer smoke tests remain
+  stubbed. Live SDK/server compatibility, actual account model access, cancellation
+  under real network failure, debug-log redaction, one-hour cache pricing and the
+  complete Step 5 QA matrix remain unverified.
+- Gateway-owned client reuse remains lazy and request counters remain local.
+- Sources used to interpret cumulative counters and exception behavior:
+  [Anthropic streaming](https://platform.claude.com/docs/en/build-with-claude/streaming),
+  installed SDK `anthropic/types/message_delta_usage.py`,
+  [Python raise statement](https://docs.python.org/3.11/reference/simple_stmts.html#the-raise-statement),
+  and [asyncio.gather](https://docs.python.org/3.11/library/asyncio-task.html#asyncio.gather).
+
+### John's manual review checkpoint
+
+- [ ] Read the four findings and compare the baseline with the source diff.
+- [ ] Explain why cumulative counters replace rather than add.
+- [ ] Explain why `from None` differs from removing retained exception context.
+- [ ] Pull the changes on the Dell laptop and run `uv run pytest -q`.
+- [ ] Confirm personal review in this log after actually completing it.
+
+Step 4 is not started.
 
 ## Steps 4-6: Interface, QA, deployment
 

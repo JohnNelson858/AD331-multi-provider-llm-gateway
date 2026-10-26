@@ -15,7 +15,7 @@ class ChunkTelemetry(BaseModel):
     output_tokens: int | None = Field(default=None, ge=0)
     total_tokens: int | None = Field(default=None, ge=0)
     local_prompt_tokens: int | None = Field(default=None, ge=0)
-    usage_source: Literal["unavailable", "local_estimate", "provider"]
+    usage_source: Literal["unavailable", "local_estimate", "provider_partial", "provider"]
     is_estimate: bool
     elapsed_seconds: float = Field(ge=0, allow_inf_nan=False)
     ttft_ms: float | None = Field(default=None, ge=0, allow_inf_nan=False)

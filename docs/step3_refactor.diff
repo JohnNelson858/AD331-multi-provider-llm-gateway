@@ -1,0 +1,132 @@
+diff --git a/src/gateway.py b/src/gateway.py
+index 7a0c7be..89c7b0f 100644
+--- a/src/gateway.py
++++ b/src/gateway.py
+@@ -1,4 +1,4 @@
+-"""Initial async text-streaming prototype. Manual audit is pending."""
++"""Async text-streaming gateway with Step 3 audit fixes."""
+ 
+ import asyncio
+ import os
+@@ -73,11 +73,18 @@ class UnifiedLLMGateway:
+         await self.aclose()
+ 
+     async def aclose(self) -> None:
++        if self._closed:
++            return
+         self._closed = True
++        clients = []
+         if self._own_openai and self._openai is not None:
+-            await self._openai.close()
++            clients.append(self._openai)
+         if self._own_anthropic and self._anthropic is not None:
+-            await self._anthropic.close()
++            clients.append(self._anthropic)
++        results = await asyncio.gather(*(client.close() for client in clients),
++                                       return_exceptions=True)
++        if any(isinstance(result, BaseException) for result in results):
++            raise GatewayProviderError("One or more provider clients could not close cleanly.")
+ 
+     async def stream(self, prompt: str, model: str, temperature: float = 0.7,
+                      *, max_tokens: int = 512) -> AsyncGenerator[StreamChunk, None]:
+@@ -107,11 +114,14 @@ class UnifiedLLMGateway:
+         stop_reason: str | None = None
+         text = ""
+         got_usage = ended = False
++        partial_usage = False
++        uncached_input: int | None = None
+ 
+         def snapshot(final: bool) -> ChunkTelemetry:
+             elapsed = time.perf_counter() - start
+             total = None if prompt_tokens is None or output_tokens is None else prompt_tokens + output_tokens
+-            source = "provider" if got_usage else ("local_estimate" if local_prompt is not None else "unavailable")
++            source = ("provider" if got_usage else "provider_partial" if partial_usage
++                      else "local_estimate" if local_prompt is not None else "unavailable")
+             cost = None
+             if prompt_tokens is not None and output_tokens is not None:
+                 cost = calculate_cost(model, prompt_tokens, output_tokens,
+@@ -126,6 +136,27 @@ class UnifiedLLMGateway:
+                 cache_write_input_tokens=cache_write, stop_reason=stop_reason,
+             )
+ 
++        def apply_anthropic_usage(usage: object) -> None:
++            # Every supplied field is cumulative. Missing fields retain the
++            # earlier value; an explicit zero must still replace that value.
++            nonlocal uncached_input, prompt_tokens, output_tokens, cache_read, cache_write
++            for field in ("input_tokens", "output_tokens", "cache_read_input_tokens",
++                          "cache_creation_input_tokens"):
++                value = getattr(usage, field, None)
++                if value is None:
++                    continue
++                if field == "input_tokens":
++                    uncached_input = value
++                elif field == "output_tokens":
++                    output_tokens = value
++                elif field == "cache_read_input_tokens":
++                    cache_read = value
++                else:
++                    cache_write = value
++            if uncached_input is not None:
++                prompt_tokens = uncached_input + cache_read + cache_write
++
++        safe_error: GatewayProviderError | None = None
+         try:
+             if provider == "openai":
+                 if self._openai is None:
+@@ -176,18 +207,14 @@ class UnifiedLLMGateway:
+                     async for event in upstream:
+                         delta = ""
+                         if event.type == "message_start":
+-                            usage = event.message.usage
+-                            cache_read = usage.cache_read_input_tokens or 0
+-                            cache_write = usage.cache_creation_input_tokens or 0
+-                            prompt_tokens = usage.input_tokens + cache_read + cache_write
+-                            output_tokens = usage.output_tokens
++                            apply_anthropic_usage(event.message.usage)
++                            partial_usage = True
+                         elif event.type == "content_block_delta" and event.delta.type == "text_delta":
+                             delta = event.delta.text
+                             if delta and first_text is None:
+                                 first_text = time.perf_counter()
+                         elif event.type == "message_delta":
+-                            # Output counters are cumulative; replace, never sum.
+-                            output_tokens = event.usage.output_tokens
++                            apply_anthropic_usage(event.usage)
+                             stop_reason = event.delta.stop_reason or stop_reason
+                             got_usage = True
+                         elif event.type == "message_stop":
+@@ -201,13 +228,17 @@ class UnifiedLLMGateway:
+         except GatewayProviderError:
+             raise
+         except (openai.AuthenticationError, anthropic.AuthenticationError):
+-            raise AuthenticationError("The provider rejected the API credentials.") from None
++            safe_error = AuthenticationError("The provider rejected the API credentials.")
+         except (openai.RateLimitError, anthropic.RateLimitError):
+-            raise RateLimitExceededError("Provider rate or quota limit reached. Try again later.") from None
++            safe_error = RateLimitExceededError("Provider rate or quota limit reached. Try again later.")
+         except (openai.APIConnectionError, anthropic.APIConnectionError):
+-            raise GatewayConnectionError("Cannot reach the provider. Check connectivity and try again.") from None
++            safe_error = GatewayConnectionError("Cannot reach the provider. Check connectivity and try again.")
+         except Exception:
+-            raise GatewayProviderError("The provider request could not be completed.") from None
++            safe_error = GatewayProviderError("The provider request could not be completed.")
++        # Raise after leaving the SDK handler so the original SDK exception is
++        # not retained in __context__ for downstream exception serializers.
++        if safe_error is not None:
++            raise safe_error
+ 
+ 
+ LLMGateway = UnifiedLLMGateway
+diff --git a/src/schemas.py b/src/schemas.py
+index 162f30a..a82bc55 100644
+--- a/src/schemas.py
++++ b/src/schemas.py
+@@ -15,7 +15,7 @@ class ChunkTelemetry(BaseModel):
+     output_tokens: int | None = Field(default=None, ge=0)
+     total_tokens: int | None = Field(default=None, ge=0)
+     local_prompt_tokens: int | None = Field(default=None, ge=0)
+-    usage_source: Literal["unavailable", "local_estimate", "provider"]
++    usage_source: Literal["unavailable", "local_estimate", "provider_partial", "provider"]
+     is_estimate: bool
+     elapsed_seconds: float = Field(ge=0, allow_inf_nan=False)
+     ttft_ms: float | None = Field(default=None, ge=0, allow_inf_nan=False)
