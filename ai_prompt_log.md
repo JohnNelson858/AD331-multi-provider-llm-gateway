@@ -5,8 +5,8 @@ Course: AD 331, Artificial Intelligence
 
 ## Workflow constraint
 
-Work proceeds one assignment step at a time. John authorized Step 4 with
-'Proceed with Step 4.' Publish the interface and stop before Step 5.
+Work proceeds one assignment step at a time. John authorized Step 5 with
+'Proceed with Step 5.' Publish the QA work and stop before Step 6.
 
 ## Step 1: Environment setup
 
@@ -279,7 +279,50 @@ Implementation references:
 Dell verification pending: pull changes, launch Uvicorn, open the page and inspect
 layout/controls. Live generation needs local keys and verified account model access.
 
-## Steps 5-6: Structured QA and deployment
+## Step 5: Structured QA
 
-Pending further instruction. Do not mark the full QA matrix, live provider demo,
-Docker deployment, or video submission complete based on these offline checks.
+Authorized by John: **Proceed with Step 5**. Implemented by ChatGPT/Codex on
+2026-10-25 (John's local date).
+
+- John provided a screenshot of the running Step 4 interface and confirmed the
+  response box below the visible area. Desktop appearance is confirmed; that
+  screenshot does not verify a real streamed response or browser cancellation.
+- Removed the Step 2 module-wide tokenizer stub. Gateway tests now run actual
+  tiktoken, including a fixed fifty-word prompt (150 o200k_base tokens), Unicode,
+  whitespace, code and literal special-token strings.
+- Added controlled-clock first-text TTFT, cancellation, abandoned-generator
+  cleanup, concurrent request isolation, pooled-client reuse and incomplete
+  Anthropic stream tests. Both providers' positive final telemetry is checked.
+- Added key-boundary tests and fake-secret-bearing errors from both installed
+  SDKs. Authentication, rate-limit and connection errors are checked for correct
+  domain types, safe str/repr, absent implicit chains and captured gateway logs.
+- Added independently hand-calculated cache cost cases and invalid count checks.
+- Found a genuine additional key-validation bug: spaces and embedded newlines
+  reached SDK construction. Security tests first reported **4 failed, 16 passed**.
+  Fixed validation before SDK construction; before/after code and evidence are
+  in [docs/step5_qa.md](docs/step5_qa.md).
+- Added two real-provider integration checks, disabled by default and explicitly
+  enabled only with `--live`. One caps each provider's output at 32 tokens. The
+  OpenAI case measures billed-vs-local input within ±10% for the fixed prompt.
+  Anthropic is not compared against OpenAI's vocabulary. Neither paid case ran.
+
+Observed results:
+
+- `uv run pytest -q`: **54 passed, 2 skipped**; 56 tests collected.
+- `node tests/web_client_smoke.cjs`: passed using simulated DOM/transport.
+- `git diff --check`: passed for the new changes.
+- No paid requests or real credentials were used. First-use tokenizer data was
+  successfully loaded, rather than replaced with a stub.
+
+[Step 5 QA report](docs/step5_qa.md) maps requirements to tests, explains why
+raw text and billed chat counts differ, records the new fix, and separates live
+checks from default results. See its official OpenAI token-counting references.
+
+Dell execution of the new suite and paid live-provider verification are pending.
+Existing model lifecycle, SDK/server compatibility, cache-TTL and browser/network
+limits remain. Do not claim all integration tests passed when two are skipped.
+
+## Step 6: Deployment
+
+Pending further instruction. No Docker/cloud deployment or video submission is
+claimed complete by the automated QA results.

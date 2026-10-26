@@ -6,15 +6,15 @@
 
 ## Current status
 
-Step 4 local web interface is implemented with FastAPI and Server-Sent Events.
-It supports provider/model selection, temperature, a streamed response, Stop,
-and live token/timing/cost metrics. Sixteen offline Python tests and simulated
-JavaScript client smoke checks pass. John completed and committed his Step 3
-manual review in `448eb1c`.
+Step 5 automated QA is implemented: **54 passed, 2 skipped**. Default tests use
+mocked providers and the real local tokenizer. The two skipped cases are paid
+live checks that require explicit `--live` opt-in. See the
+[Step 5 QA report](docs/step5_qa.md) for the requirement matrix and limitations.
 
-Opening and checking the page on John's Dell is next. Visual browser testing and
-live provider calls are not yet verified. Full Step 5 QA and Step 6 deployment
-remain pending. This is a local development app, not a public production service.
+The Step 4 local interface is running on John's Dell; he confirmed its desktop
+appearance. John completed and committed the Step 3 manual review in `448eb1c`.
+Live provider responses, account model access and billing remain unverified.
+Step 6 deployment is pending. This is a local development app.
 
 ## Environment and prerequisites
 
@@ -66,6 +66,7 @@ AD331-multi-provider-llm-gateway/
   docs/
     step2_generation_prompt.md
     step3_refactor.diff
+    step5_qa.md
   src/
     __init__.py
     gateway.py
@@ -83,6 +84,10 @@ AD331-multi-provider-llm-gateway/
     test_audit_regressions.py
     test_security.py
     test_web.py
+    test_pricing.py
+    test_live.py
+    conftest.py
+    qa_data.py
     web_client_smoke.cjs
 ```
 
@@ -170,12 +175,17 @@ separate deployment/security review in Step 6; do not simply expose this port.
 uv run pytest -q
 ```
 
-Current result: **16 passed**. These include the original five gateway checks,
-five Step 3 regressions, and six web checks for SSE normalization, cost formatting,
-provider/model validation, error sanitation, lifecycle and origin/host boundaries.
-The suite uses mock providers and a stubbed tokenizer; it does not validate
-live provider behavior, real token counts, invoices or account access. The full
-Step 5 QA matrix is still pending.
+Current result: **54 passed, 2 skipped**. The default suite makes no paid
+provider requests. Gateway tests now use real tiktoken; first use may download
+vocabulary data. Checks cover both stream protocols, a fixed fifty-word prompt,
+timing, billing precision, malformed keys, secret-bearing SDK exceptions,
+cancellation, concurrency, client ownership and the web interface.
+
+The skipped tests are paid real-provider checks. They run only with explicit
+`--live` opt-in; instructions and limitations are in the
+[Step 5 QA report](docs/step5_qa.md). Local text counts are not identical to
+billed chat input. OpenAI's live test checks the ±10% difference for the fixed
+prompt; Anthropic is not compared to an OpenAI tokenizer.
 
 If Node.js is already installed, optional client smoke checks run with:
 
@@ -255,8 +265,9 @@ See [ai_prompt_log.md](ai_prompt_log.md) and the
 is retained as its own commit. Step 3 findings, before-and-after excerpts and
 regression evidence are recorded in the log and [source diff](docs/step3_refactor.diff).
 John committed his completed manual review in `448eb1c`. Step 4 implementation
-and verification limits are recorded in the log. The full
-`tests/test_security.py` suite is still pending Step 5.
+and verification limits are recorded in the log. Step 5 adds the credential and
+secret-redaction suite, real tokenizer tests and the
+[QA coverage report](docs/step5_qa.md). Live integration remains pending.
 
 ## Deployment and recording
 

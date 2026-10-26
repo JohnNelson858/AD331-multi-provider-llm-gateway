@@ -40,7 +40,8 @@ class GatewayInputError(GatewayProviderError):
 def _api_key(provider: Provider) -> str:
     name = "OPENAI_API_KEY" if provider == "openai" else "ANTHROPIC_API_KEY"
     key = os.environ.get(name, "").strip()
-    if not key or not key.startswith("sk-") or len(key) < 20 or "your_" in key:
+    if (not key or not key.startswith("sk-") or len(key) < 20 or "your_" in key.lower()
+            or any(ch.isspace() or not ch.isascii() or ord(ch) < 33 or ord(ch) == 127 for ch in key)):
         raise AuthenticationError(f"Set a valid {name} in your local environment.")
     return key
 
