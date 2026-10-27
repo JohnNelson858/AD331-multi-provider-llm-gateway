@@ -1,14 +1,29 @@
 # Step 5 QA report
 
-Student: John Nelson · AD 331 · Local date: October 25, 2026
+Student: John Nelson · AD 331 · Updated October 27, 2026
 
-## Observed result
+## Final Step 5 result
+
+On October 27, John ran `uv run pytest -v --live` on his Dell. The terminal
+screenshot supplied in this conversation shows **57 passed in 18.50s**, with
+no failures or skipped tests. Both live provider cases passed, including the
+OpenAI fifty-word billed-vs-local token comparison. The screenshot contains the
+final summary, not per-request metrics; no unreported live-test measurements
+are inferred. The assistant did not execute these paid requests or handle keys.
+
+Both providers also succeeded in John's local web interface. His Anthropic
+screenshot shows FINAL usage: 17 input tokens, 33 output tokens, TTFT 706.7 ms,
+32.9 tokens/sec displayed, $0.000182 calculated cost, and normal `end_turn`.
+
+Step 5 is complete for the defined suite. Deployment and video remain pending.
+
+## Default-suite result (without paid requests)
 
 `uv run pytest -q`: **55 passed, 2 skipped**. All 57 cases were collected after the Anthropic compatibility regression was added.
 `node tests/web_client_smoke.cjs`: passed (simulated DOM and transport).
 `git diff --check`: passed for this change.
 
-No paid API calls or real credentials were used. Provider requests are mocked
+No paid API calls or real credentials were used in the default suite. Provider requests are mocked
 in the default suite. Unlike Step 2, the gateway tests now execute real tiktoken;
 the first run may download its vocabulary data. A vocabulary download is not a
 paid inference request. Do not describe these results as live integration success.
@@ -26,8 +41,8 @@ paid inference request. Do not describe these results as live integration succes
 | Async lifetime/concurrency | Cancellation, abandoned generators, concurrent isolated counters, pooled client reuse and shutdown regressions | Passed with mocked streams |
 | Web boundary | SSE, Decimal display, input validation, static errors, host/origin checks | Passed via TestClient |
 | Browser controls | Client smoke script checks partial display, split UTF-8, final metrics, provider switch, Stop, recovery | Passed in a simulated DOM |
-| Actual browser appearance | John's screenshot and confirmation after Step 4 | Desktop page visually confirmed; live interactions unverified |
-| Real provider stream/usage | Two opt-in tests in `tests/test_live.py` | Skipped; local keys/account access needed |
+| Actual browser appearance | John's screenshots of the local page and both provider responses | Desktop layout and successful provider responses confirmed; Stop not verified in a native browser |
+| Real provider stream/usage | Two opt-in tests in `tests/test_live.py`; Dell `--live` run | Both passed on October 27 |
 
 ## Token-count interpretation
 
@@ -96,7 +111,7 @@ Optional client smoke test, only if Node.js is installed:
 node tests/web_client_smoke.cjs
 ```
 
-## Paid live checks — separate, not executed
+## Paid live checks — passed on the Dell October 27
 
 These commands create real API usage. First configure local `.env` credentials,
 confirm billing/model access, and review the configured model IDs/rates. Do not
@@ -116,9 +131,9 @@ uv run pytest tests/test_live.py --live -v -k claude
 
 The default `pytest` invocation never opts in, even if `.env` already has keys.
 The OpenAI example model is marked deprecated in the existing configuration;
-verify current account availability before requesting it. Anthropic's legacy
-model temperature compatibility is still not live-verified. Do not infer model
-availability from passing mocks.
+John successfully accessed it in the observed live checks. Anthropic's pinned
+API-version compatibility also passed. These results establish access for that
+account and run, not a guarantee of future model availability.
 
 Remaining limits: real provider errors/logging, network cancellation behavior,
 mobile layout in a native browser, one-hour cache pricing, deployed behavior
@@ -149,4 +164,5 @@ The earlier 54-pass Dell run remains valid historical evidence.
 John also supplied a successful live OpenAI screenshot: 36 input tokens,
 32 output tokens, TTFT 1911.6 ms, displayed throughput 15.4 tokens/sec and cost
 $0.000025. It ended at the output-token limit. This verifies that UI request,
-not the separate optional fifty-word live pytest case. Anthropic retry pending.
+not the separate optional fifty-word live pytest case. The retry and live pytest
+checks later succeeded, as recorded in the October 27 result above.

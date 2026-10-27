@@ -6,17 +6,16 @@
 
 ## Current status
 
-Step 5 automated QA is implemented: **55 passed, 2 skipped**. Default tests use
-mocked providers and the real local tokenizer. The two skipped cases are paid
-live checks that require explicit `--live` opt-in. See the
-[Step 5 QA report](docs/step5_qa.md) for the requirement matrix and limitations.
+Step 5 is complete. On October 27, 2026, John ran `uv run pytest -v --live`
+on his Dell and supplied a terminal screenshot showing **57 passed in 18.50s**,
+with no failures or skipped tests. This includes both paid live provider checks.
+The default non-live suite remains **55 passed, 2 skipped** by design.
+See the [Step 5 QA report](docs/step5_qa.md) for coverage and limitations.
 
-The Step 4 local interface is running on John's Dell; he confirmed its desktop
-appearance. John completed and committed the Step 3 manual review in `448eb1c`.
-John verified a live OpenAI response in the local UI. Anthropic live verification
-is pending a compatibility fix: Haiku 4.5 requests explicitly use API version
-`2023-06-01` to retain temperature support with SDK 2.x.
-Step 6 deployment is pending. This is a local development app.
+Both providers also returned successful responses in the local web interface.
+John completed the Step 3 manual review in `448eb1c`. Haiku 4.5 requests explicitly
+use API version `2023-06-01` to retain temperature support with SDK 2.x.
+Step 6 deployment is pending. This remains a local development app.
 
 ## Environment and prerequisites
 
@@ -253,7 +252,8 @@ Sources: [OpenAI model pricing](https://developers.openai.com/api/docs/models/gp
 and [Haiku model ID](https://platform.claude.com/docs/en/models/haiku-4-5/overview).
 OpenAI marks `gpt-4o-mini` deprecated. It remains the assignment-aligned draft
 configuration; verify availability or replace it before the live demonstration.
-Access has not been tested for either provider account.
+John verified both configured models with his account in the October 27 live run.
+Future availability must still be checked when preparing the demonstration.
 
 Rates exclude batch discounts, tools, images, regional premiums, custom service
 tiers, and contracts. The draft does not request explicit prompt caching. If
@@ -270,7 +270,8 @@ regression evidence are recorded in the log and [source diff](docs/step3_refacto
 John committed his completed manual review in `448eb1c`. Step 4 implementation
 and verification limits are recorded in the log. Step 5 adds the credential and
 secret-redaction suite, real tokenizer tests and the
-[QA coverage report](docs/step5_qa.md). Live integration remains pending.
+[QA coverage report](docs/step5_qa.md). Both live provider tests passed on the Dell
+on October 27 (57 tests passed overall).
 
 ## Deployment and recording
 

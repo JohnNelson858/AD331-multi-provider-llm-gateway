@@ -350,3 +350,29 @@ on the Dell remains pending; the two paid pytest cases are still unexecuted.
 John previously verified the live OpenAI UI request (36 input/32 output tokens,
 1911.6 ms TTFT, 15.4 tokens/sec displayed, $0.000025 displayed cost). This is
 separate from the opt-in live pytest case. Step 6 remains unstarted.
+
+
+## October 27: Step 5 completed on John's Dell
+
+Following authorization to finish Step 5, John ran:
+
+```powershell
+uv run pytest -v --live
+```
+
+He supplied a terminal screenshot showing **57 passed in 18.50 seconds**, with
+no failures or skips. Both opt-in live provider tests therefore passed alongside
+the mocked/unit/web suite. This also verifies the OpenAI fifty-word token-count
+comparison implemented in the live test; no unshown request metrics are inferred.
+The assistant inspected the supplied screenshot; John executed the paid API
+requests locally. No credentials were shared with the assistant or committed.
+
+Earlier, John's Anthropic UI screenshot confirmed FINAL usage with 17 input and
+33 output tokens, 706.7 ms TTFT, 32.9 tokens/sec displayed, $0.000182 calculated
+cost and normal `end_turn`. This verifies the compatibility fix in the local UI,
+in addition to the subsequent live test run. Both provider UI paths succeeded.
+
+Updated README and QA report to record this evidence. The default suite still
+skips the two paid cases unless `--live` is explicitly supplied. Native browser
+cancellation, one-hour cache pricing and deployed behavior remain outside the
+verified claims. Step 5 is complete; Step 6 awaits John's instruction.
