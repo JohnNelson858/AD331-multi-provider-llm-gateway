@@ -1,0 +1,26 @@
+name: ad331-llm-gateway
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ad331-llm-gateway:local
+    ports:
+      - "127.0.0.1:8000:8000"
+    secrets:
+      - source: gateway_env
+        target: /app/.env
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    stop_grace_period: 15s
+    restart: "no"
+secrets:
+  gateway_env:
+    file: ./.env

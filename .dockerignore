@@ -1,0 +1,13 @@
+# Allow only the files needed to build the application.
+**
+!Dockerfile
+!pyproject.toml
+!uv.lock
+!src
+!src/**
+# Keep nested credentials and Python caches out of src as well.
+**/.env
+**/.env.*
+**/__pycache__
+**/*.py[cod]
+**/secrets.toml

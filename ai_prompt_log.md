@@ -5,8 +5,9 @@ Course: AD 331, Artificial Intelligence
 
 ## Workflow constraint
 
-Work proceeds one assignment step at a time. John authorized Step 5 with
-'Proceed with Step 5.' Publish the QA work and stop before Step 6.
+Work proceeds one assignment step at a time. John authorized Step 6 with
+'Proceed with Step 6.' Prepare the local Docker option and verify it on the Dell
+before marking deployment complete.
 
 ## Step 1: Environment setup
 
@@ -376,3 +377,33 @@ Updated README and QA report to record this evidence. The default suite still
 skips the two paid cases unless `--live` is explicitly supplied. Native browser
 cancellation, one-hour cache pricing and deployed behavior remain outside the
 verified claims. Step 5 is complete; Step 6 awaits John's instruction.
+
+
+## October 27: Step 6 local container preparation
+
+Authorized by John: **Proceed with Step 6.** Selected the assignment's local
+Docker demonstration option (Option B), consistent with his existing Dell
+workflow and avoiding the need for public hosting.
+
+Added `Dockerfile`, `docker-compose.yml`, `.dockerignore` and a detailed guide
+at [docs/step6_deployment.md](docs/step6_deployment.md). The Dockerfile uses
+Python 3.11, pinned uv 0.13.4, locked runtime dependencies, a build-time tokenizer
+vocabulary download and a non-root runtime. Compose publishes loopback port
+8000 and mounts the existing local dotenv file as a read-only runtime secret at
+`/app/.env`. Credentials are not copied into the image or passed as build args.
+The image has a local readiness check that never calls a provider.
+
+Checks performed: Compose YAML parsed with a YAML parser; the local-only port,
+secret mapping, read-only root and dropped capabilities were checked. The uv
+locked no-dev/no-project-install dry-run resolved the recorded runtime packages.
+`git diff --check` passed. No source behavior or dependencies were changed, so
+the 57-pass live suite was not rerun and no additional API charges were incurred.
+
+No Docker or Podman executable/engine is available in the assistant environment.
+Docker's own Compose validation, actual image build, container health and live
+provider checks inside Docker remain pending on John's Dell. Do not mark Step 6
+complete based on YAML parsing or the earlier non-container QA run.
+
+References are linked in the deployment guide. Next action: verify Docker
+Desktop/Compose availability on the Dell, then build and exercise the container.
+The required webcam video and final submission remain pending.

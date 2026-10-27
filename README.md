@@ -15,7 +15,8 @@ See the [Step 5 QA report](docs/step5_qa.md) for coverage and limitations.
 Both providers also returned successful responses in the local web interface.
 John completed the Step 3 manual review in `448eb1c`. Haiku 4.5 requests explicitly
 use API version `2023-06-01` to retain temperature support with SDK 2.x.
-Step 6 deployment is pending. This remains a local development app.
+Step 6 Option B container files are prepared. Docker build and end-to-end
+verification on the Dell are pending; this remains a local development app.
 
 ## Environment and prerequisites
 
@@ -62,12 +63,16 @@ AD331-multi-provider-llm-gateway/
   uv.lock
   .env.example
   .gitignore
+  .dockerignore
+  Dockerfile
+  docker-compose.yml
   README.md
   ai_prompt_log.md
   docs/
     step2_generation_prompt.md
     step3_refactor.diff
     step5_qa.md
+    step6_deployment.md
   src/
     __init__.py
     gateway.py
@@ -275,5 +280,30 @@ on October 27 (57 tests passed overall).
 
 ## Deployment and recording
 
-Pending. The assignment requires a working deployment or local Docker demo
-and a 5:00-7:00 walkthrough with a visible webcam overlay.
+The assignment's **Option B: Local Docker demo** is prepared. Follow the
+[Windows/Docker deployment guide](docs/step6_deployment.md). Docker Desktop must
+be installed, running, and using Linux containers. Keep the existing local
+`.env` file; Compose mounts it as a read-only runtime secret rather than baking
+it into the image. Stop a separately running Uvicorn process before using port
+8000.
+
+```powershell
+docker compose config --quiet
+docker compose up --build -d --wait
+docker compose ps
+```
+
+Open <http://127.0.0.1:8000>. Then verify one short request per provider; those
+requests incur API charges. Stop the container after use:
+
+```powershell
+docker compose down
+```
+
+Build/readiness/provider checks inside Docker are **pending on the Dell**. The
+assistant environment has no Docker engine; no successful image build or Docker
+live demo is claimed. The previous 57-pass QA run used the local Python app.
+
+The submission will identify **Local Docker demo (Option B)** after verification.
+A 5:00-7:00 video with visible webcam, both providers, audit and QA evidence is
+still required. The loopback address is local and is not a public deployment URL.
