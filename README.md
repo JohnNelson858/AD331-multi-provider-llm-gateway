@@ -15,8 +15,11 @@ See the [Step 5 QA report](docs/step5_qa.md) for coverage and limitations.
 Both providers also returned successful responses in the local web interface.
 John completed the Step 3 manual review in `448eb1c`. Haiku 4.5 requests explicitly
 use API version `2023-06-01` to retain temperature support with SDK 2.x.
-Step 6 Option B container files are prepared. Docker build and end-to-end
-verification on the Dell are pending; this remains a local development app.
+Step 6 **Local Docker Demo (Option B)** is verified on the Dell: Compose
+configuration passed, the service was healthy, both providers returned FINAL
+usage, and shutdown left no running service. See the
+[deployment verification record](docs/step6_deployment.md). The required video
+and Canvas submission remain pending.
 
 ## Environment and prerequisites
 
@@ -280,7 +283,7 @@ on October 27 (57 tests passed overall).
 
 ## Deployment and recording
 
-The assignment's **Option B: Local Docker demo** is prepared. Follow the
+The assignment's **Option B: Local Docker demo** was verified on October 27, 2026. Follow the
 [Windows/Docker deployment guide](docs/step6_deployment.md). Docker Desktop must
 be installed, running, and using Linux containers. Keep the existing local
 `.env` file; Compose mounts it as a read-only runtime secret rather than baking
@@ -300,10 +303,12 @@ requests incur API charges. Stop the container after use:
 docker compose down
 ```
 
-Build/readiness/provider checks inside Docker are **pending on the Dell**. The
-assistant environment has no Docker engine; no successful image build or Docker
-live demo is claimed. The previous 57-pass QA run used the local Python app.
+John verified build/readiness/provider behavior on his Dell and supplied
+screenshots. The service reported healthy, OpenAI and Anthropic returned text
+with FINAL usage, and shutdown left an empty Compose service list. The assistant
+inspected this evidence; it did not run Docker or handle keys on the Dell. The
+separate 57-pass live QA run used the local Python environment.
 
-The submission will identify **Local Docker demo (Option B)** after verification.
+The submission should identify **Local Docker demo (Option B)**.
 A 5:00-7:00 video with visible webcam, both providers, audit and QA evidence is
 still required. The loopback address is local and is not a public deployment URL.

@@ -1,6 +1,6 @@
 # Step 6: Local Docker deployment (Option B)
 
-John Nelson · AD 331 · Prepared October 27, 2026
+John Nelson · AD 331 · Verified on the Dell October 27, 2026
 
 ## Deployment choice and status
 
@@ -8,11 +8,12 @@ This implements the assignment's **Option B: Local Web Server Demo**, with a
 Dockerfile and docker-compose.yml. The app stays on the Dell; the video will
 show its end-to-end behavior. There is no public deployment URL.
 
-**Prepared, not yet verified in Docker.** This assistant environment has neither
-Docker nor Podman. YAML parsing and the locked runtime dependency dry-run passed;
-an image build, Compose validation, health check and live provider behavior
-inside the container still need verification on John's Dell. The previous
-57-pass live QA run was against the local Python environment, not a container.
+**Step 6 complete: verified on John's Dell.** John supplied screenshots confirming
+Docker/Compose availability, the Linux engine, successful quiet Compose
+validation, a healthy running service on loopback port 8000, successful responses
+from both providers, and an empty service list after shutdown. The assistant
+reviewed the evidence; it did not run Docker on the Dell or receive API keys.
+The separate 57-pass live pytest run used the local Python environment.
 
 ## Files and behavior
 
@@ -154,17 +155,38 @@ docker compose restart gateway
 This setup is for a local course demonstration. Public hosting would need a
 separate design for authentication, quotas and deployment secrets.
 
-## Verification record (fill only after observing results)
+## Verification record — October 27, 2026
 
-- [ ] Docker Desktop/Linux engine verified on the Dell.
-- [ ] `docker compose config --quiet` passed.
-- [ ] Image built and service reported healthy.
-- [ ] Page opened through Docker's published port.
-- [ ] OpenAI returned text with FINAL usage inside Docker.
-- [ ] Anthropic returned text with FINAL usage inside Docker.
-- [ ] Container stopped using `docker compose down`.
+- [x] Docker Desktop/Linux engine verified on the Dell.
+- [x] `docker compose config --quiet` passed.
+- [x] Image built and service reported healthy.
+- [x] Page opened through Docker's published port.
+- [x] OpenAI returned text with FINAL usage inside Docker.
+- [x] Anthropic returned text with FINAL usage inside Docker.
+- [x] Container stopped using `docker compose down`.
 
-Step 6 is not marked complete until build and end-to-end checks succeed.
+Step 6 is complete based on the supplied Dell evidence. Docker reported version
+29.9.2, Compose v5.6.1, and engine OS `linux`. The Compose service was
+`ad331-llm-gateway-gateway-1`, image `ad331-llm-gateway:local`, with healthy status
+and port `127.0.0.1:8000->8000/tcp`.
+
+The same prompt and 64-token maximum were used for these container UI checks:
+
+| Provider/model | Input tokens | Output tokens | TTFT (ms) | Displayed tokens/sec | Calculated USD cost | Finish |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| OpenAI / gpt-4o-mini | 16 | 32 | 2631.1 | 11.4 | $0.000022 | stop |
+| Anthropic / claude-haiku-4-5-20251001 | 17 | 45 | 884.9 | 33.3 | $0.000242 | end_turn |
+
+Both displayed FINAL provider-reported usage, with zero cache reads/writes.
+These are observations from individual requests, not a controlled performance
+benchmark or invoice reconciliation. The final `docker compose ps` screenshot
+showed only column headings, confirming no remaining service after shutdown.
+
+The optional image dotenv-path check was not shown and is not claimed as
+executed. The image design excludes dotenv files, but this record does not
+claim a complete image/history credential scan. Native-browser Stop behavior,
+one-hour cache accounting and public-hosting behavior remain outside the
+verified scope.
 
 ## Recording and submission
 
@@ -174,7 +196,7 @@ webcam visible and the total video between 5:00 and 7:00. Use existing live QA
 results as evidence rather than describing skipped default tests as live checks.
 If rerunning `--live` for recording, it creates two more paid requests.
 
-Submission deployment entry after verification: **Local Docker demo (Option B)**.
+Submission deployment entry: **Local Docker demo (Option B)**.
 The GitHub repository and unlisted/public YouTube video URL are still required.
 A local loopback URL is not an instructor-accessible public deployment URL.
 

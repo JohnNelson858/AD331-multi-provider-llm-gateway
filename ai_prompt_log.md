@@ -407,3 +407,33 @@ complete based on YAML parsing or the earlier non-container QA run.
 References are linked in the deployment guide. Next action: verify Docker
 Desktop/Compose availability on the Dell, then build and exercise the container.
 The required webcam video and final submission remain pending.
+
+
+## October 27: Step 6 completed on John's Dell
+
+After installing Windows prerequisites and Docker Desktop, John supplied the
+following evidence during the authorized Step 6 workflow:
+
+- Docker version 29.9.2, Compose v5.6.1 and engine OS `linux`.
+- Successful pull of the deployment files and quiet Compose validation.
+- A healthy Compose service using image `ad331-llm-gateway:local`, published at
+  `127.0.0.1:8000`.
+- OpenAI UI response inside Docker: input 16, output 32, TTFT 2631.1 ms,
+  displayed throughput 11.4 tokens/sec, calculated cost $0.000022, finish `stop`.
+- Anthropic UI response inside Docker: input 17, output 45, TTFT 884.9 ms,
+  displayed throughput 33.3 tokens/sec, calculated cost $0.000242, finish `end_turn`.
+- Both requests displayed FINAL usage with zero cache reads/writes.
+- After being instructed to run `docker compose down`, John supplied a
+  `docker compose ps` screenshot with column headings and no service rows.
+
+The assistant inspected screenshots; John ran the Docker commands and paid
+provider calls locally. No keys were supplied to the assistant. Deployment
+verification details and completed checkboxes are in
+[docs/step6_deployment.md](docs/step6_deployment.md). The optional image dotenv
+path check was not shown, so no image scan is claimed. Single-request timings
+are observations, not a performance benchmark. No source code changed or paid
+checks were rerun to record this documentation.
+
+Step 6 **Local Docker Demo (Option B)** is complete. The required 5:00–7:00
+webcam video, its unlisted/public YouTube URL and Canvas submission remain
+pending. A loopback address is not a public deployment URL.
