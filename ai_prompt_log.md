@@ -437,3 +437,37 @@ checks were rerun to record this documentation.
 Step 6 **Local Docker Demo (Option B)** is complete. The required 5:00–7:00
 webcam video, its unlisted/public YouTube URL and Canvas submission remain
 pending. A loopback address is not a public deployment URL.
+
+
+## October 30: Video walkthrough preparation
+
+Authorized by John: **Help me prepare the video walkthrough.**
+
+Prepared `docs/video_walkthrough.md` and `docs/video_narration.txt` based on
+current source, the preserved initial draft, two Step 3 audit findings, the
+verified Docker demonstration and the October 27 57-pass live QA evidence.
+The guide targets about 6:15 with approximately 680 spoken words plus screen
+actions, and includes screen cues, Zoom recording references, a rehearsal
+checklist, provider/test commands and Canvas submission text. Timing is an
+estimate until John rehearses; no recording or upload is claimed complete.
+
+The proposed failure demonstration uses a separate PowerShell process with
+OPENAI_API_KEY set to the obviously invalid string DEMO_INVALID_KEY and a second
+server on port 8001. Existing dotenv loading preserves this process-local override;
+local key-shape validation returns AuthenticationError before SDK construction.
+The main Docker server remains on port 8000 with its original secret mount.
+No real key is altered, shown or requested. This is explicitly described as
+local credential validation, not a provider rejecting a valid-shaped key.
+The exact second-server rehearsal and browser/network/log inspection remain
+pending on the Dell and must be observed before recording the final take.
+
+Read current implementation, test definitions and audit documentation. Reviewed
+Zoom's official local-recording, video-layout and recording-settings guidance
+(linked in the walkthrough). Checked Markdown formatting and local script
+content; no source or dependency changes were made, no new paid requests were
+executed, and tests were not rerun merely for a documentation change.
+
+The planned recording repeats two small paid UI requests and two opt-in paid
+live pytest cases. Key material remains local and excluded from the recording.
+The finished MP4, runtime verification, YouTube permissions and Canvas submission
+are still John's next actions.

@@ -312,3 +312,15 @@ separate 57-pass live QA run used the local Python environment.
 The submission should identify **Local Docker demo (Option B)**.
 A 5:00-7:00 video with visible webcam, both providers, audit and QA evidence is
 still required. The loopback address is local and is not a public deployment URL.
+
+
+## Video walkthrough preparation
+
+Use the [timed walkthrough guide](docs/video_walkthrough.md) for a 6:15 target,
+with exact screen actions, Docker startup, a separate invalid-credential server,
+Zoom setup, rehearsal checks and Canvas submission text. A
+[narration-only copy](docs/video_narration.txt) is available for practice.
+The guide is preparation, not a claim that the video has been recorded or
+submitted. Rehearse the credential demonstration before recording; it does not
+require editing or showing the real `.env` file. The planned full take makes
+four paid inference requests (two UI requests plus two live pytest cases).
